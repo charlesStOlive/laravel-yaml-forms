@@ -105,9 +105,20 @@ trait YamlFormsTrait
         ];
     }
 
-    public static function getEmptyForm($context = null) {
-        return array_keys(static::getFormFields($context));
+    public static function getEmptyForm($context = null, $fields = null) {
+    $fields = $fields ?? static::getFormFields($context);
+    $defaultFields = [];
+
+    foreach ($fields as $key => $field) {
+        if (is_array($field) && array_key_exists('attributs', $field)) {
+            $defaultFields[$key] = static::getEmptyForm($context, $field['attributs']);
+        } else {
+            $defaultFields[$key] = $field['default'] ?? null;
+        }
     }
+
+    return $defaultFields;
+}
 
     public static function getStaticModelFormConfig()
     {
@@ -171,7 +182,7 @@ trait YamlFormsTrait
     //     $columns = $columns->filter(function ($config) {
     //             return $ordorable = $config['searchable'] ?? false;
     //         })->keys();
-    //     logger($columns);
+    //     //logger($columns);
     // }
 
     public static function dataYamlColumnTransformer($data, $context = null)
@@ -302,6 +313,7 @@ trait YamlFormsTrait
     {
         if ($item === 'unique') {
             $tab = $this->getTable();
+            //logger($this->id);
             $item = Rule::unique($tab)->ignore($this->id);
         }
     }
@@ -346,21 +358,29 @@ trait YamlFormsTrait
         return $this->setValueFrom($fields);
     }
 
-    public function setValueFrom($fields)
+    public function setValueFrom($fields, $recurseKey= false)
     {
+        logger("setValueFrom : ".$recurseKey);
+        logger($fields);
         $columnData = [];
+        $model = $this;
+        if($recurseKey) {
+            $model = $this->$recurseKey;
+            logger($model);
+        }
 
         foreach ($fields as $key => $config) {
             $columnFromYaml = $config['valueFrom'] ?? null;
             if ($columnFromYaml) {
-                $columnData[$key] = $this->$columnFromYaml;
+                $columnData[$key] =  $model->$columnFromYaml;
             } else {
-                $columnData[$key] = $this->$key;
+                $columnData[$key] =  $model->$key ?? $model[$key] ?? null;
             }
 
             // If the config has "datas" children, process them recursively.
             if (isset($config['attributs'])) {
-                $columnData[$key]['attributs'] = $this->setValueFrom($config['attributs']);
+                //logger($config['attributs']);
+                $columnData[$key] = $this->setValueFrom($config['attributs'], $key);   
             }
         }
 

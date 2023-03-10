@@ -215,12 +215,12 @@ class TableauController extends Controller
 
     public function edit(Tableau $tableau)
     {
-        logger('edit');
+        //logger('edit');
         $inertiaData = [
             'formData' => $tableau->dataYamlFieldsTransformer(),
             'config' => $tableau->getModelFormConfig()
         ];
-        logger($tableau->getModelFormConfig()['fields']);
+        //logger($tableau->getModelFormConfig()['fields']);
         return Inertia::render('Tableaux/Edit', $inertiaData);
     }
 
