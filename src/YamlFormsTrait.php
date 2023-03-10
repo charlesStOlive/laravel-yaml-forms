@@ -451,6 +451,11 @@ trait YamlFormsTrait
 
     private static function getYamlFilePath($fileName)
     {
-        return base_path("App/Models/Yaml/$fileName");
+        return base_path("app/Models/Yamls/$fileName");
+    }
+
+    private static function getYamlChildFilePath($fileName)
+    {
+        return base_path("app/Models/Yamls/Childs/$fileName");
     }
 }
